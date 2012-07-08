@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<local:BaseCanvas xmlns:mx="http://www.adobe.com/2006/mxml" width="494" height="600" xmlns:local="*" horizontalScrollPolicy="off" verticalScrollPolicy="off" doubleClickEnabled="true">
+	
+	<mx:Image x="15" y="35" source="@Embed(source='assets/glass.jpg')"/>
+	<mx:Canvas x="15" y="35" width="464" height="450" horizontalScrollPolicy="off" verticalScrollPolicy="off" mouseEnabled="false" id="frame">
+		<mx:Image id="image" progress="onProgress(event)" init="onInit(event)" complete="onComplete(event)" open="onOpen(event)" mouseEnabled="false"/>
+	</mx:Canvas>
+	<mx:Image source="@Embed(source='assets/frame.png')" mouseEnabled="true"/>
+    <mx:Canvas id="progress1" x="20" y="254" width="454" height="12" backgroundColor="white" visible="false"/>
+    <mx:Canvas id="progress2" x="20" y="254" width="0" height="12" backgroundColor="blue" visible="false"/>
+    <mx:Canvas id="bt" x="15" y="35" width="464" height="450" buttonMode="false" backgroundColor="white" alpha="0" click="photoClick()"/>
+	<mx:Label x="51" y="501.75" textAlign="center" fontSize="{_fontSize}" id="txt"/>
+    <mx:Image x="51" y="501.75" id="txtImg"/>
+	<!--mx:Image x="24" y="525" source="{leftClass}" scaleX="0.25" id="left" scaleY="0.25" rollOver="left.source=leftOverClass" rollOut="left.source=leftClass" click="(parent as ecards).doPrevious(this)" buttonMode="true"/-->
+	<!--mx:Image x="446" y="525" source="{rightClass}" scaleX="0.25" scaleY="0.25" id="right" rollOver="right.source=rightOverClass" rollOut="right.source=rightClass" click="(parent as ecards).doNext(this)" buttonMode="true"/-->
+
+	<mx:Script>
+		<![CDATA[
+		import mx.controls.Alert;
+		
+        [Bindable]
+        private var _fontSize:Number = 24;
+        private var displayMethod:String;
+        public var _url:String;
+        public var byteSrc:Object;
+        [Bindable]
+        public var isLocal:Boolean = false;
+
+        public override function randomPos(data:Object):void {
+            super.randomPos(data);
+            var num:Number;
+            _fontSize = Number(data.@["initFontSize"]);
+            //txt.text = String(data.@["desc"]);
+            bt.toolTip="Double click me to load into the editor";
+            _url = String(data.@["url"]);
+            image.source = _url;
+            this.displayMethod = String(data.@["displayMethod"]);
+            //Alert.show(this.displayMethod);
+            processRotate(txt);
+        }
+        
+        public function randomPos2(data:Object):void {
+            super.randomPos(null);
+            this.displayMethod = "scaleFill";
+            bt.toolTip="Local file, double click me to load into the editor";
+            if(data is Bitmap) {
+                //Alert.show("HAHA!");
+                var myClonedChild:BitmapData = (data as Bitmap).bitmapData.clone();
+                var bmp:Bitmap = new Bitmap(myClonedChild);
+
+                byteSrc = bmp;
+                image.source = bmp;
+            } else {
+                byteSrc = data;
+                image.source = data; 
+            }
+        }
+
+        private function processRotate(label:Label):void {
+            if(label.width>0 && label.height>0) {
+                label.width=392;
+                label.height=82;
+                setTimeout(processRotate_,200,label);
+            } else {
+                setTimeout(processRotate,200,label);
+            }
+        }
+
+        private function processRotate_(label:Label):void {
+            var bmp:BitmapData = new BitmapData(label.width,label.height,true,0);
+            bmp.draw(label);
+            var bt:Bitmap = new Bitmap(bmp);
+            txtImg.source = bt;
+        }
+
+        private function onProgress(e:ProgressEvent):void {
+            progress2.width=progress1.width*e.bytesLoaded/e.bytesTotal;
+        }
+
+        private function onOpen(e:Event):void {
+            progress1.visible=true;
+            progress2.visible=true;
+            progress2.width=0;
+        }
+
+        private function onInit(e:Event):void {
+            if (displayMethod == "stretch") {
+                image.x = 0;
+                image.y = 0;
+                image.scaleX = frame.width / image.contentWidth;
+                image.scaleY = frame.height / image.contentHeight;
+            } else {
+                var scale:Number;
+                if ("scaleFit" == displayMethod) {
+                    scale = Math.min(frame.width / image.contentWidth, frame.height / image.contentHeight);
+                } else if ("scaleFill" == displayMethod) {
+                    scale = Math.max(frame.width / image.contentWidth, frame.height / image.contentHeight);
+                } else {
+                    scale = 1;
+                }
+                image.scaleX = image.scaleY = scale;
+                image.x = (frame.width - image.contentWidth * scale) / 2;
+                image.y = (frame.height - image.contentHeight * scale) / 2;
+            }
+        }
+
+        private function onComplete(e:Event):void {
+            progress1.visible=progress2.visible=false;
+            this.removeChild(progress1);
+            this.removeChild(progress2);
+        }
+
+        public override function toggle():void {
+            super.toggle();
+            if(this.big) {
+                bt.buttonMode=true;
+                bt.toolTip="what?";
+            } else {
+                bt.buttonMode=false;
+                bt.toolTip=txt.text;
+            }
+        }
+
+        private function photoClick():void {
+            if (bt.buttonMode) {
+                navigateToURL(new URLRequest(_url), "_blank");
+            }
+        }
+
+        [Embed(source='assets/left.png')]
+        private static const leftClass:Class;
+        [Embed(source='assets/left-over.png')]
+        private static const leftOverClass:Class;
+        [Embed(source='assets/right.png')]
+        private static const rightClass:Class;
+        [Embed(source='assets/right-over.png')]
+        private static const rightOverClass:Class;
+		]]>
+	</mx:Script>	
+	
+</local:BaseCanvas>
+
+

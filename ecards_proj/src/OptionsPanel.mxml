@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<HBox 
+	xmlns="http://www.adobe.com/2006/mxml" 
+	horizontalScrollPolicy="off"
+	verticalScrollPolicy="off"
+	height="30" >
+	
+	<Script>
+		<![CDATA[
+			import mx.core.Application;
+			
+			[Bindable] public var mouseWheelEnabled : Boolean = true;
+			[Bindable] public var mouseFollowEnabled : Boolean = true;
+			[Bindable] public var imageDoubleClickEnabled : Boolean = true;
+			[Bindable] public var zoomIncrement : Number = .15;	
+			[Bindable] public var rotateAngle : int = 15;	
+		]]>
+	</Script>
+	
+	<!--NumericStepper minimum=".1" maximum="1.75" stepSize=".05" value=".25" id="increment" change="zoomIncrement = increment.value"  width="55"/-->
+	<!--NumericStepper minimum="0" maximum="180" stepSize="10" value="45" id="angle" change="rotateAngle = angle.value"  width="55"/-->
+</HBox>

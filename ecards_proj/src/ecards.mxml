@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<local:PhotoesApp width="1280" height="800" xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" xmlns:local="*" mouseUp="onMouseUp(event)" mouseMove="onMouseMove(event)" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+	<mx:Style>
+		Application {
+			background-image: Embed(source='assets/back.jpg'); 
+			background-repeat: no-repeat;			
+			background-position: center;
+			background-attachment: fixed;
+			borderSkin: ClassReference("com.degrafa.skins.CSSSkin");
+		}
+        ToolTip {
+            font-size:14;
+        }
+	</mx:Style>	
+	<mx:GlowFilter id="backFilter" color="0x333333" alpha="100" blurX="150" blurY="150" strength="1.5" quality="3" inner="true" knockout="true"/>
+	<mx:Canvas width="100%" height="100%" filters="{[backFilter]}" backgroundColor="white" mouseMove="onMouseMove(event)" mouseUp="onMouseUp(event)"/>
+	<!--local:TheHelp id="help" x="-110" y="-71"/-->
+	
+	<mx:XML id="testData">
+		<photos displayMethod="scaleFill">
+			<photo desc="image1" url="pics/image1.jpg"/>
+			<photo desc="image2" url="pics/image2.jpg"/>
+			<photo desc="image3" url="pics/image3.jpg"/>
+			<photo desc="image4" url="pics/image4.jpg"/>
+			<photo desc="image5" url="pics/image5.jpg"/>
+		</photos>
+	</mx:XML>	
+
+</local:PhotoesApp>
+
+

@@ -1,0 +1,83 @@
+body {
+  background: #5d9ab2 url('pics/wood_background.png') repeat top left;
+}
+
+#card_wrapper {
+  font-size: 18px;
+  position: relative;
+  margin-left: 20%;
+  margin-right: auto;
+}
+
+/*
+#wood_background {
+  left: 0px;
+  top:  0px;
+}
+#wood_background img {
+}
+*/
+.background {
+  position: absolute;
+}
+
+#letter_background {
+  left: 0px;
+  top:  0px;
+}
+#letter_background img {
+  width: 960px;
+}
+
+#pin_img {
+  left: 314px;
+  top:  0px;
+  z-index: 9;
+}
+#pin_img img {
+}
+
+.section {
+  position: absolute;
+}
+
+.email {
+  color: black;
+  display: inline;
+}
+
+#sender {
+  left: 500px;
+  top: 535px;
+}
+#sender_email {
+  /* display: inline;*/
+}
+
+#receiver {
+  left: 90px;
+  top:  375px;
+}
+#receiver_email {
+}
+
+#message {
+  left: 99px;
+  top:  410px;
+  width: 549px;
+}
+#message_content {
+}
+
+.email_font {
+  font-family:"Comic Sans MS";
+}
+
+#card_pic {
+  left: 198px;
+  top:  28px;
+}
+
+#card_pic img {
+  width: 400px;
+}

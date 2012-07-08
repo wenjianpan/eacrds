@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<local:BaseCanvas xmlns:mx="http://www.adobe.com/2006/mxml" width="166" height="127" backgroundImage="@Embed(source='assets/help.png')" xmlns:local="*" click="onClick()">
+	<mx:Canvas x="125" y="79" width="34" height="34" borderStyle="solid" cornerRadius="17" backgroundColor="gray" borderThickness="0">
+		<mx:Canvas x="5" y="5" width="24" height="24" borderStyle="solid" cornerRadius="12" backgroundColor="0xeeeeee" borderThickness="0">
+			<mx:Label x="3" y="-4" text="?" fontSize="24" fontWeight="bold" color="gray"/>
+		</mx:Canvas>
+	</mx:Canvas>
+
+  <mx:Label text="FaceBook Album" x="13" y="20" fontSize="12" fontWeight="bold" color="0x34566" />
+  
+  <mx:Label x="20" y="42" textAlign="center" fontSize="10" color="blue" click="labelClick()" selectable="true" buttonMode="true" mouseEnabled="true" mouseChildren="false" height="20">
+		<mx:htmlText>
+			<![CDATA[<center>User name</center>]]>
+		</mx:htmlText>
+	</mx:Label>
+	
+  <mx:LinkButton label="Prev 10 Pics" x="10" y="65" toolTip="Load Local File" click="prevPictures();"/>
+  <mx:LinkButton label="Next 10 Pics" x="10" y="85" toolTip="Load Saved Picture" click="nextPictures();"/>
+	
+	<mx:Script>
+		<![CDATA[
+			import flash.net.*;
+			import gs.TweenLite;
+			import gs.easing.*;
+			
+			private function labelClick():void {
+				navigateToURL(new URLRequest("http://www.facebook.com"),"_blank");
+			}
+			
+			private function prevPictures():void {
+				
+			}
+			
+			private function nextPictures():void {
+				
+			}
+			
+			private function onClick():void {
+				if(this.x<0 && this.y<0) {
+					TweenLite.to(this, 0.6, {x:0, y:0});
+				} else {
+				  TweenLite.to(this, 0.6, {x:-110, y:-71});
+				}
+			}
+        
+		]]>
+	</mx:Script>
+	
+</local:BaseCanvas>

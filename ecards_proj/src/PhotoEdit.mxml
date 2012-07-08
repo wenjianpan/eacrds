@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="utf-8"?>
+<local:BaseCanvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:flash.filters="flash.filters.*" width="713" height="600" 
+	xmlns:local="*" horizontalScrollPolicy="off" verticalScrollPolicy="off" doubleClickEnabled="true">
+
+  <mx:Image source="@Embed(source='assets/tframe.png')" mouseEnabled="true"/>
+  <mx:Canvas id="progress1" x="20" y="254" width="454" height="12" backgroundColor="white" visible="false"/>
+  <mx:Canvas id="progress2" x="20" y="254" width="0" height="12" backgroundColor="blue" visible="false"/>
+  <mx:Canvas id="bt" x="15" y="35" width="464" height="450" buttonMode="false" backgroundColor="white" alpha="0" />
+		
+	<local:ToolBar id="toolbar" x="70" y="86" />
+	<mx:Button label="Browse" x="76" y="325" width="85" click="doOpenDir()"/>
+	<mx:Button label="Next Step" x="76" y="350" width="85" click="(parent as ecards).doCreateLetter(this)"/>
+	
+	<local:FramesList id="frameList" x="250" y="454" />
+	
+	<mx:Script>
+		<![CDATA[
+    import mx.controls.Image; 
+    import mx.core.IUIComponent;
+    import mx.core.UIComponent;
+    import mx.managers.PopUpManager; 
+    import mx.containers.TitleWindow;
+    import flash.net.URLRequest;
+    import flash.net.FileFilter;
+    import mx.controls.Alert;
+    import com.adobe.images.JPGEncoder;
+    import mx.graphics.ImageSnapshot;
+    import mx.graphics.codec.*; 
+    import flash.net.FileReference;
+
+    [Bindable]
+		public var imgX:int = 255;
+		[Bindable]
+		public var imgY:int = 50;
+		[Bindable]
+		public var imgW:int = 420;
+		[Bindable]
+		public var imgH:int = 356;
+		
+		public function loadPhoto(c:Object):void {
+		   var scale:Number;
+		   if((c as PhotoFrame).isLocal) {
+		       zoomComponent.loadLocal((c as PhotoFrame).byteSrc);
+		   }
+		   else zoomComponent.loadImage((c as PhotoFrame)._url);
+		}
+		    
+		public function loadFrame(i:int):void {
+			if(i<0){
+				cframe.source = null;
+				cframe.hitArea = null;
+				return;
+			}
+		   var _url:String;
+		   _url = "frames/image" + i.toString() + ".png"
+		   cframe.load(_url);
+		   cframe.hitArea = cframe.ht;
+		   cframe.width = imgW;
+       cframe.height = imgH;
+		}
+
+ 		public function doZoomin():void {
+ 		   //zoomComponent.reset();
+ 		   zoomComponent.zoomIn()
+        }
+        
+ 		public function doZoomout():void {
+           zoomComponent.zoomOut();
+        }
+        
+ 		public function doRotater():void {
+           zoomComponent.rotateImage(1);
+        } 
+        
+        public function doRotatel():void {
+           zoomComponent.rotateImage(0);
+        }  
+        
+        public function doToGray():void {
+           zoomComponent.convertToGrayscale();
+        }
+        
+        public function doToColor():void {
+           zoomComponent.convertToColor();
+        }
+        
+        public function doRefresh():void {
+           zoomComponent.reset();
+        }
+        
+		private var fileRef:FileReference;
+ 
+		public function doOpenDir():void
+		{
+			var arr:Array = [];
+			
+			fileRef = new FileReference();
+			fileRef.addEventListener(Event.SELECT, fileRef_select);
+			fileRef.addEventListener(Event.COMPLETE, fileRef_complete);
+			fileRef.addEventListener(ProgressEvent.PROGRESS, loadProgress);
+            arr.push(new FileFilter("Images", ".gif;*.jpeg;*.jpg;*.png"));
+			fileRef.browse(arr);
+		}
+ 
+		private function fileRef_select(evt:Event):void
+		{
+			zoomComponent.isImageLoaded = false;   // only for bug: hand cursor will not changed
+			fileRef.load();
+		}
+        
+        public var theImage:Bitmap; 
+        private var byteArray:ByteArray;
+        private var top:DisplayObject;
+        private var loader:Loader=new Loader(); 
+		/*************************************************************************/
+		public function resizeBitmapData (rW:Number, rH:Number):BitmapData {
+			var img:Bitmap = new Bitmap(theImage.bitmapData);
+			
+			if (img.width > img.height) {
+					if (img.height>rH)
+						rH = img.height * (rW / img.width);
+					else{ // do not resize
+						rH = img.height;
+						rW = img.width;
+					}
+			}
+			else {
+				if (img.width>rW)
+					rW = img.width * (rH / img.height);
+				else{ // do not resize
+						rH = img.height;
+						rW = img.width;
+					}
+			}
+			
+			var bmpData:BitmapData = new BitmapData(rW, rH);
+			var scaleMatrix:Matrix = new Matrix( rW/img.width, 0, 0, rH/img.height, 0,0);
+			var colorTransform:ColorTransform = new ColorTransform();
+			bmpData.draw(theImage, scaleMatrix , colorTransform, null, null, true);
+			return (bmpData);
+		}
+		  
+        private function loaderCompleteHandler(e:Event):void    
+        {    
+            theImage = Bitmap(loader.content); 
+            //Alert.show(theImage.width.toString() + " " + theImage.height.toString());
+            var bmd: BitmapData = resizeBitmapData(800, 600);
+            //Alert.show(bmd.width.toString() + " " + bmd.height.toString());
+            var bmp:Bitmap = new Bitmap(bmd);
+            
+            top=this.parent;
+            (top as ecards).addLocalPhoto(bmp);      
+            zoomComponent.loadLocal(bmp);       
+        }
+		/******************************************************************************/
+		 
+		private function fileRef_complete(evt:Event):void
+		{
+			top=this.parent;
+			
+            if(fileRef.data.length < 400*1024) {   
+			   (top as ecards).addLocalPhoto(fileRef.data); 
+			   zoomComponent.loadLocal(fileRef.data);
+			} else {
+				 
+				byteArray = fileRef.data;    
+                loader.contentLoaderInfo.addEventListener(Event.COMPLETE,loaderCompleteHandler);    
+                loader.loadBytes(byteArray);
+			}
+			
+			progressBar.visible = false;
+		}
+		
+		[Bindable]
+		private var percentLoaded:Number;
+		[Bindable]
+		private var percentLoaded2:int;
+		private var fileReference:FileReference=new FileReference();
+	
+		private function loadProgress(evt:ProgressEvent):void {
+                progressBar.visible = true;
+                percentLoaded = Number(evt.bytesLoaded / evt.bytesTotal);
+                percentLoaded2 = percentLoaded*100;
+    }
+        
+    public function copyImage():Bitmap 
+    {
+            //var bd:BitmapData = new BitmapData(frame.width,frame.height);
+            //bd.draw(frame);
+            var bd:BitmapData = ImageSnapshot.captureBitmapData(frame);
+                            
+            return new Bitmap(bd);          
+    }
+
+		]]>
+	</mx:Script>	
+	
+	<mx:Canvas id="maskCanvas" x="{imgX}" y="{imgY}" backgroundColor="#FFFFFF" width="{imgW}" height="{imgH}" alpha="0.0"/>
+	
+	<mx:Image x="{imgX}" y="{imgY}" source="@Embed(source='assets/blackboard.jpg')" id="blackboard" />
+	
+	<mx:Canvas x="{imgX}" y="{imgY}" width="{imgW}" height="{imgH}" horizontalScrollPolicy="off" verticalScrollPolicy="off" id="frame"
+		creationComplete = "onComplete()" mouseDown="onMouseDown(event);" mouseMove="onMouseMove(event);" mouseUp="onMouseUp(event);" >
+
+	  <mx:Script>
+	  	<![CDATA[	
+          import mx.controls.Alert;   // for debug
+          import flash.display.DisplayObjectContainer;
+          import flash.events.*
+          import flash.geom.Point;
+                  			  	  
+		  private var dragTarget:DisplayObject = null;
+		  private var startPos:Point=new Point();
+		  private var startPoint:Point=new Point();
+
+          private function onComplete():void {
+              _windows = new Array();	
+          }
+
+          private const MOUSEMODE_MOVE: int = 1;
+          private const MOUSEMODE_RESIZE: int = 2;
+          private const MOUSEMODE_MOVE_ATTACH: int = 3;
+		  private const MOUSEMODE_DIALOG_CLOSE: int = 4;
+		    
+          // managed windows
+          private var _windows: Array;
+          private var _currFocus: Dialogbox = null;
+		
+          // mousemode
+          private var mouseMode: int = 0;
+                  	
+          /*
+          private function onMouseDown(e:MouseEvent):void {
+
+             dragTarget=e.target as DisplayObject;
+									
+             if(dragTarget!=null) {
+                  //startPos.x=dragTarget.x;
+                  //startPos.y=dragTarget.y;
+                  //startPoint.x=stage.mouseX;
+                  //startPoint.y=stage.mouseY;		
+                  e.stopImmediatePropagation();		
+             }
+          }
+				
+          private function onMouseUp(e:MouseEvent):void {
+             if(dragTarget!=null) {
+                  e.stopImmediatePropagation();
+                  //Alert.show(cimage.x.toString() + cimage.y.toString());
+             }
+             dragTarget=null;
+          }
+				
+          private function onMouseMove(e:MouseEvent):void {
+             if(dragTarget!=null) {
+                  //e.stopImmediatePropagation();
+                  //dragTarget.x=startPos.x+stage.mouseX-startPoint.x;
+                  //dragTarget.y=startPos.y+stage.mouseY-startPoint.y;		
+             }
+          }  */
+          
+          private function stopMyDrag(e:MouseEvent): void {
+             e.stopImmediatePropagation();
+          }   
+				
+          public function addDialog():void {
+               /* add new dialog box: size, xy, attach point xy */
+               var dbox:Dialogbox = new Dialogbox(new Point(100,80), new Point(100,100), new Point(120,200), true);	
+               _windows.push( dbox );
+               //dbox.mask = maskCanvas;
+               frame.rawChildren.addChild(dbox);
+          }
+
+          public function getWindowFromPoint( aPoint: Point ): Dialogbox
+          {
+               var i: int = _windows.length - 1;
+               var found: Dialogbox = null;
+		
+               // scan array in a front-to-back fashion
+               for( ; i >= 0; i-- )
+               {
+                   var w: Dialogbox = _windows[ i ];
+                   if( w.getInteractiveRectangle().containsPoint( aPoint ) )
+                   {
+                       // exit at first found
+                       found = w;
+                       break;
+                   } else if(w.getAttachRectangle().containsPoint( aPoint )) {
+                       //Alert.show("haha");
+                       found = w;
+                       break;
+                   }
+               }
+		
+               return found;
+          }
+						
+				private var _mouseDown: Boolean = false;
+				private var _mouseOffset: Point = null;
+				private var _mouseDownPt: Point = new Point();
+				private var _ptInRect: Point = new Point();
+				private var _mouseWnd: Dialogbox = null;
+				private var flag:int = -1;
+				public function onMouseDown( evt: MouseEvent ): void
+				{
+						// get window from point
+						// set focus
+						// if _mouseDown then move window
+						
+						_mouseDown = true;
+						
+						//Alert.show(evt.stageX.toString() + " " + evt.stageY.toString());
+						//Alert.show(this.x.toString() + " i " + this.y.toString());
+						//Alert.show(frame.x.toString() + " f " + frame.y.toString());
+						var relPosition:Point = new Point(evt.stageX-frame.x-this.x, evt.stageY-frame.y-this.y);
+						
+						_mouseWnd = getWindowFromPoint( new Point( relPosition.x, relPosition.y ) );
+			
+						if( _mouseWnd != null )
+						{
+							evt.stopImmediatePropagation();
+							_mouseDownPt.x = _ptInRect.x = relPosition.x;
+							_mouseDownPt.y = _ptInRect.y = relPosition.y;
+
+							//setFocus( _mouseWnd );
+							_mouseWnd.onMouseDown( evt );
+
+							if(_mouseWnd.getAttachRectangle().contains( relPosition.x, relPosition.y )) {
+								//Alert.show("haha");
+								mouseMode = MOUSEMODE_MOVE_ATTACH;
+							} else if(_mouseWnd.getCloseRectangle().contains( relPosition.x, relPosition.y )) {
+								mouseMode = MOUSEMODE_DIALOG_CLOSE;
+							}
+							// handle animator
+							else if( _mouseWnd.isResizable())
+							{
+							  flag = -1;
+							  if(_mouseWnd.getResizeRectangle0().contains( relPosition.x, relPosition.y )) {
+							     flag = 0;
+							  } else if(_mouseWnd.getResizeRectangle1().contains( relPosition.x, relPosition.y )) {
+							     flag = 1;
+							  } else if(_mouseWnd.getResizeRectangle2().contains( relPosition.x, relPosition.y )) {
+							     flag = 2;
+							  } else if(_mouseWnd.getResizeRectangle3().contains( relPosition.x, relPosition.y )) {
+							     flag = 3;
+							  }
+							  
+							  if(flag >= 0) {
+								   mouseMode = MOUSEMODE_RESIZE;
+
+								   // make the mouseDownPt point windowRect-relative
+								   _ptInRect.x -= _mouseWnd.getInteractiveRectangle().x;
+								   _ptInRect.y -= _mouseWnd.getInteractiveRectangle().y;
+								} else {
+								   mouseMode = MOUSEMODE_MOVE;
+								   _mouseOffset = new Point( relPosition.x - _mouseWnd.x, relPosition.y - _mouseWnd.y );
+								}
+							}
+							else
+							{
+								mouseMode = MOUSEMODE_MOVE;
+								_mouseOffset = new Point( relPosition.x - _mouseWnd.x, relPosition.y - _mouseWnd.y );
+							}
+						}
+						else
+						{
+							_mouseWnd = null;
+							//setFocus( null );
+						}
+		
+				}
+
+				public function onMouseUp( evt: MouseEvent ): void
+				{
+					
+					_mouseDown = false;
+		
+					if( _mouseWnd )
+					{
+						evt.stopImmediatePropagation();
+						_mouseWnd.onMouseUp( evt );
+						if(mouseMode == MOUSEMODE_DIALOG_CLOSE){
+                            frame.rawChildren.removeChild(_mouseWnd);
+                            _windows.splice(_windows.indexOf(_mouseWnd ),1);
+						}
+					}
+		
+					_mouseWnd = null;
+					mouseMode = 0;
+				}
+		
+				private var _amountPt: Point = new Point();
+				private var _tmpPt: Point = new Point( 0, 0 );
+				private var _semaphoreRed: Boolean = false;
+				private var _canResizeX: Boolean = true;
+				private var _canResizeY: Boolean = true;
+		
+				public function onMouseMove( evt: MouseEvent ): void
+				{
+					// do not let this function overlap itself
+					
+					if( _semaphoreRed ) return;
+					_semaphoreRed = true;
+					
+					var sX: Number = evt.stageX - frame.x - this.x;
+					var sY: Number = evt.stageY - frame.y - this.y;
+		
+					// compute amount of mouse movement
+					_amountPt.x = sX - _mouseDownPt.x;
+					_amountPt.y = sY - _mouseDownPt.y;
+					_mouseDownPt.x = sX;
+					_mouseDownPt.y = sY;
+		
+					if( _mouseDown && _mouseWnd != null )
+					{  
+						evt.stopImmediatePropagation();
+						_mouseWnd.onMouseMove( evt );
+		
+						switch( mouseMode )
+						{
+							case MOUSEMODE_MOVE:
+								_mouseWnd.translate( _amountPt );
+								break;
+		
+							case MOUSEMODE_RESIZE:
+		
+								//var oldw: Number = _mouseWnd.getRectangle().width;
+								//var oldh: Number = _mouseWnd.getRectangle().height;
+		
+								_tmpPt.x = ( _canResizeX ) ? _amountPt.x : 0;
+								_tmpPt.y = ( _canResizeY ) ? _amountPt.y : 0;
+								_mouseWnd.resize( _tmpPt, flag );
+								
+								/*
+								if( ( _amountPt.x != 0 ) && _mouseWnd.getRectangle().width == oldw )
+								{
+									_canResizeX = ( sX > _mouseWnd.getRectangle().right - _mouseWnd.getResizeRectangle().width / 2 );
+								}
+								
+								if( ( _amountPt.y != 0 ) && _mouseWnd.getRectangle().height == oldh )
+								{
+									_canResizeY = ( sY > _mouseWnd.getRectangle().bottom - _mouseWnd.getResizeRectangle().height / 2 );
+								}	
+								*/
+								break;
+							case MOUSEMODE_MOVE_ATTACH:	  
+							  if(_mouseWnd.moveAttachPoint( _amountPt) == false) {
+							     //_mouseWnd = null;
+							  }
+							  break;
+						}
+					}
+		
+					_semaphoreRed = false;
+				}
+	      
+	  	]]>
+	  </mx:Script> 
+	  
+	  <local:ImageZoom 
+			id="zoomComponent" 
+			width="{imgW}" height="{imgH}"
+			borderStyle="solid" 		
+			 
+			bottom="0" left="0" top="0" right="0"
+			zoomIncrement="{ options.zoomIncrement }"
+			rotateAngle="{ options.rotateAngle }"
+			imageDoubleClickEnabled="{ options.imageDoubleClickEnabled }"
+			mouseWheelEnabled="{ options.mouseWheelEnabled }"
+			mouseFollow="{ options.mouseFollowEnabled }" />
+			
+    <local:MyImage id="cframe" maintainAspectRatio="false" />	
+      
+	</mx:Canvas>
+	
+	<mx:Image x="272" y="40" source="@Embed(source='assets/attach.png')" />
+	<!--mx:Image x="631" y="352" source="@Embed(source='assets/corner.png')" /-->
+	<mx:Image x="40" y="400" source="@Embed(source='assets/logo.png')" />
+	<mx:HSlider id="zoom" minimum=".05" maximum="5" value="1" change="zoomComponent.zoom( zoom.value )" 
+		 mouseDown="stopMyDrag(event);" x="258" y="422" />
+	<local:OptionsPanel x="10" y="420" id="options" width="100%"/>
+	
+	<mx:Canvas id="progressBar"
+		visible="false" x="360" y="230" 
+		 width="270" height="30" horizontalScrollPolicy="off" verticalScrollPolicy="off"
+		borderStyle="solid" borderThickness="3" borderColor="#000000" backgroundColor="#FFFFFF" backgroundAlpha=".5" cornerRadius="10" >
+		
+		<mx:Label text="Loading local file... { percentLoaded2 }%" fontSize="16" width="100%" textAlign="center">
+			<mx:filters>
+				<flash.filters:DropShadowFilter color="0" alpha=".5" />
+			</mx:filters>
+		</mx:Label>
+		
+	</mx:Canvas>
+		
+</local:BaseCanvas>
+

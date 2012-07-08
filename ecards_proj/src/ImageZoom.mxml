@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Canvas 
+	xmlns="http://www.adobe.com/2006/mxml"
+	xmlns:flash.filters="flash.filters.*" 
+	creationComplete="onCreationComplete()"
+	horizontalScrollPolicy="off" verticalScrollPolicy="off"
+	mouseWheel="onMouseWheel(event)">
+	
+	<Script>
+		<![CDATA[
+			import mx.utils.Base64Encoder;
+			import mx.core.Application;
+			 import mx.controls.Alert;
+			
+			public static const EVENT_SCALE_UPDATED : String = "scaleUpdated";
+			
+			[Bindable]
+			public var zoomDuration : Number = 500;
+			[Bindable]
+			public var zoomEasingFunction : Function = null;
+			
+			[Bindable]
+			public var moveDuration : Number = 500;
+			[Bindable]
+			public var moveEasingFunction : Function = null;
+			
+			[Bindable]
+			public var fadeDuration : Number = 500;
+			[Bindable]
+			public var fadeEasingFunction : Function = null;
+			
+			private	var borderBuffer : Number = 50;
+			private var minScale : Number = .02;
+			private var isAnimating : Boolean = false;
+			public var zoomIncrement : Number = .1;
+			public var rotateAngle : int = 15;
+			public var mouseWheelEnabled : Boolean = true;
+			public var mouseFollow : Boolean = true;
+			public var imageDoubleClickEnabled : Boolean = true;
+			
+			public var isImageLoaded : Boolean = false;
+			
+			[Bindable]
+			private var _source : Object = null;
+			[Bindable]
+			private var _url : String = null;
+			private var Colorfilter : ColorMatrixFilter = new ColorMatrixFilter();
+			
+			private function onCreationComplete() : void 
+			{
+				var ColorMatrix:Array = new Array();
+	            
+	      ColorMatrix = ColorMatrix.concat([1, 0, 0, 0, 0]); 
+	      ColorMatrix = ColorMatrix.concat([0, 1, 0, 0, 0]); 
+	      ColorMatrix = ColorMatrix.concat([0, 0, 1, 0, 0]); 
+	      ColorMatrix = ColorMatrix.concat([0, 0, 0, 1, 0]);
+	      
+	      Colorfilter.matrix = ColorMatrix;
+	      
+				Application.application.addEventListener( MouseEvent.MOUSE_UP, onApplicationMouseUp );
+			}
+
+			private function onApplicationMouseUp( event : MouseEvent ) : void 
+			{
+				image.stopDrag();
+			}
+			
+			private function onMouseWheel( event : MouseEvent ) : void 
+			{
+				if ( mouseWheelEnabled ) {
+					eventZoom( event.delta ); 
+					//Alert.show("ha");
+				}
+			}
+			
+			private function onDoubleClick() : void 
+			{
+				if ( imageDoubleClickEnabled )
+					eventZoom( 3 );
+			}
+			
+			private function eventZoom( increment : Number ) : void 
+			{
+				if ( image.percentLoaded >= 100 || isImageLoaded == true)
+				{
+					//Alert.show("ha");
+					if( mouseFollow )
+					{
+						zoomEffect.originX = image.mouseX;
+						zoomEffect.originY = image.mouseY;
+						
+					}
+					else
+					{
+						setDefaultRegistrationPoint();
+					}
+
+					if(increment > 0) {
+					    zoom( image.scaleX * (1+zoomIncrement*increment/3) ); 
+					} else if(increment < 0) {
+					    zoom( image.scaleX * ((1-zoomIncrement*(-increment)/3)));
+					} else {
+					    zoom(1);
+					}
+					
+				}
+			}
+			
+			private function setDefaultRegistrationPoint() : void 
+			{
+				zoomEffect.originX = image.width/2;
+				zoomEffect.originY = image.height/2;
+			}
+			
+			public function reset() : void
+			{
+			  
+				if(angle != 0) {
+           fromAng = angle;
+
+           rotateEffect.end();
+           toAng = 0;
+           rotateEffect.play();
+           angle = 0; 
+        }
+				
+				moveEffect.xTo = (this.width - image.contentWidth)/2;
+				moveEffect.yTo = (this.height - image.contentHeight)/2;
+				moveEffect.play();
+				zoom( 1 );
+				this.dispatchEvent( new Event( EVENT_SCALE_UPDATED ) );
+			}
+			
+			public function zoomIn() : void 
+			{
+				setDefaultRegistrationPoint();
+				zoom( zoomEffect.zoomHeightTo * (1+zoomIncrement));
+			}
+			
+			public function zoomOut() : void 
+			{
+				setDefaultRegistrationPoint();
+				//Alert.show((zoomEffect.zoomHeightTo - zoomIncrement).toString());
+				zoom( zoomEffect.zoomHeightTo * (1-zoomIncrement));
+			}
+			
+			public function zoom( factor : Number ) : void
+			{
+				if ( !isAnimating )
+				{
+					isAnimating = true;
+					if ( zoomEffect.isPlaying )
+					{
+						zoomEffect.end();
+					}
+					
+					zoomEffect.zoomHeightTo = Math.max(factor, minScale);
+					zoomEffect.zoomWidthTo = Math.max(factor, minScale);
+					
+					zoomEffect.play();
+					this.dispatchEvent( new Event( EVENT_SCALE_UPDATED ) );
+				}
+			}
+			
+			public function recenterImage() : void
+			{
+				image.x = (this.width - image.contentWidth)/2;
+				image.y = (this.height - image.contentHeight)/2;
+			}
+			
+			private function onEffectEnd() : void 
+			{
+				isAnimating = false;
+				if( image.x > this.width - borderBuffer )
+				{
+					image.x = this.width-borderBuffer;
+				}
+				else if( image.x < borderBuffer-image.width )
+				{
+					image.x = borderBuffer-image.width;
+				}
+				
+				if( image.y > this.height - borderBuffer )
+				{
+					image.y = this.height-borderBuffer;
+				}
+				else if( image.y < borderBuffer-image.height )
+				{
+					image.y = borderBuffer-image.height;
+				} 
+			}
+			
+			private function imageComplete() : void
+			{
+				this.dispatchEvent( new Event( EVENT_SCALE_UPDATED ) );
+				recenterImage();
+				isImageLoaded = true;
+			}
+			
+			public function set source( value : Object ) : void
+			{
+				if(value != null && value != _source)
+				{
+					image.scaleX = 1;
+					image.scaleY = 1;
+					image.x = 0;
+					image.y = 0;
+					_source = value;
+					this.dispatchEvent( new Event( EVENT_SCALE_UPDATED ) );
+				}	
+			}
+			
+			public function get source() : Object
+			{
+				return _source;
+			}
+			
+			[Bindable(event="scaleUpdated")]
+			public function get scale() : Number
+			{
+				return zoomEffect.zoomHeightTo;
+			}
+			
+			public function get content() : DisplayObject
+			{
+				return image.content;
+			}
+			
+			private function  onMouseDown(e:MouseEvent): void
+			{
+				e.stopImmediatePropagation();
+				image.startDrag();
+			}
+					
+			public function loadImage(url: String): void
+			{
+			    _url = url;
+			    isImageLoaded = false;
+                image.load(url);
+                
+                //image.width = 420;
+                //image.height = 368;
+                
+                if(angle != 0) {
+                   fromAng = angle;
+
+                   rotateEffect.end();
+                   toAng = 0;
+                   rotateEffect.play();
+                   angle = 0; 
+                }
+                zoom( 1 );
+                image.filters = [Colorfilter];
+			}
+			
+			public function loadLocal(b:Object): void
+			{
+				_url=null; // just for loading bar
+				isImageLoaded = false;
+				if(b is Bitmap) {    // is big image resized bitmap
+					var myClonedChild:BitmapData = (b as Bitmap).bitmapData.clone();
+                    var bmp:Bitmap = new Bitmap(myClonedChild);
+                    image.source = bmp;
+				}
+                else image.source = b;
+                
+                isImageLoaded = true;
+                
+                //image.width = 420;
+                //image.height = 368;
+                
+                if(angle != 0) {
+                   fromAng = angle;
+
+                   rotateEffect.end();
+                   toAng = 0;
+                   rotateEffect.play();
+                   angle = 0; 
+                }
+                zoom( 1 );
+                image.filters = [Colorfilter];
+			}
+			
+			[Bindable]
+			public var angle:int=0;
+			[Bindable]
+			public var fromAng:int=0;
+			[Bindable]
+			public var toAng:int=0;
+			
+			public function rotateImage(isRight:int):void {
+				fromAng = angle;
+				if(isRight) {
+					angle += rotateAngle;
+				} else {
+				    angle -= rotateAngle;
+				}
+                rotateEffect.end();
+                toAng = angle;
+                rotateEffect.play();
+      }
+            
+            public function convertToGrayscale(): void {
+            	var matrix:Array = [0.3, 0.59, 0.11, 0, 0,
+		           0.3, 0.59, 0.11, 0, 0,
+		           0.3, 0.59, 0.11, 0, 0,
+		           0, 0, 0, 1, 0];
+		          
+	            var grayscaleFilter:ColorMatrixFilter = new ColorMatrixFilter(matrix);
+	            image.filters = [grayscaleFilter];
+            }
+            
+            public function convertToColor(): void {      
+	            image.filters = [ Colorfilter ];
+
+            }
+            
+			
+		  import mx.managers.CursorManager;
+		  // Define a variable to hold the cursor ID.
+          private var cursorID:Number = 0;
+          // Embed the cursor symbol.
+          [Embed(source="assets/hand.png")]
+          private var handCursorSymbol:Class;
+
+          private function changeCursor(e:MouseEvent):void
+          { 
+          	 if(isImageLoaded == false) {
+          	     return;
+          	 }
+             if(e.type == "mouseOver") 
+             { 
+                  cursorID = CursorManager.setCursor(handCursorSymbol); 
+             }else
+             { 
+                  CursorManager.removeCursor(cursorID); 
+             } 
+          }
+          
+		]]>
+	</Script>
+	
+    <Zoom id="zoomEffect" duration="{ zoomDuration }" target="{ image }" 
+        zoomHeightTo="1" zoomWidthTo="1" effectEnd="onEffectEnd()" easingFunction="{ zoomEasingFunction }" />
+    <Rotate id="rotateEffect" angleFrom="{ fromAng }" angleTo="{ toAng }" target="{ image }" />
+    <Move id="moveEffect" duration="{ moveDuration }" target="{ image }" easingFunction="{ moveEasingFunction }" />
+    <Fade id="fadeInEffect" duration="{ fadeDuration }" alphaTo="1" easingFunction="{ fadeEasingFunction }" />
+	
+	<Canvas id="maskCanvas" backgroundColor="#FF0000" width="100%" height="100%" />
+	
+	<Canvas
+		visible="{ _url != null &amp;&amp; image.percentLoaded &lt; 100 }" horizontalCenter="0" verticalCenter="0" 
+		hideEffect="WipeDown" showEffect="WipeDown" width="210" height="30"
+		borderStyle="solid" borderThickness="3" borderColor="#000000" backgroundColor="#FFFFFF" backgroundAlpha=".5" cornerRadius="10" >
+		
+		<Label text="Loading... { Math.floor(image.percentLoaded) }%" fontSize="16" width="100%" textAlign="center">
+			<filters>
+				<flash.filters:DropShadowFilter color="0" alpha=".5" />
+			</filters>
+		</Label>
+		
+	</Canvas>
+	
+	
+	<Image id="image" mask="{ maskCanvas }" mouseDown="onMouseDown(event)" 
+		showEffect="{ fadeInEffect }" complete="imageComplete()" mouseOver="changeCursor(event)" mouseOut="changeCursor(event)"
+		doubleClickEnabled="true" doubleClick="onDoubleClick()" />
+	
+</Canvas>

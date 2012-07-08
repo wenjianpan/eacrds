@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+
+<local:BaseCanvas xmlns:mx="http://www.adobe.com/2006/mxml" height="430" width="96" xmlns:local="*" horizontalScrollPolicy="off" verticalScrollPolicy="off" >
+	<!--mx:Image source="@Embed(source='assets/suback.png')" mouseEnabled="true"/-->
+	
+	<mx:Button id="prev" x="11" y="20" height="34" width="34" icon="@Embed(source='assets/prev.png')" click="doPrev();" />
+	<mx:Button id="next" x="51" y="20" height="34" width="34" icon="@Embed(source='assets/next.png')" click="doNext();" />
+	<mx:Button id="zoomin" x="11" y="63" height="34" width="34" icon="@Embed(source='assets/zoomin.png')" click="doZoomin();" />
+	<mx:Button id="zoomout" x="51" y="63" height="34" width="34" icon="@Embed(source='assets/zoomout.png')" click="doZoomout();" />
+	<mx:Button id="rotater" x="11" y="106" height="34" width="34" icon="@Embed(source='assets/rotater.png')" click="doRotater();" />
+	<mx:Button id="rotatel" x="51" y="106" height="34" width="34" icon="@Embed(source='assets/rotatel.png')" click="doRotatel();" />
+	<mx:Button id="gray" x="11" y="150" height="34" width="34" icon="@Embed(source='assets/lemo.png')" click="doToColor();" />
+	<mx:Button id="lemo" x="51" y="150" height="34" width="34" icon="@Embed(source='assets/gray.png')" click="doToGray();" />
+	<mx:Button id="speech" x="11" y="193" height="34" width="34" icon="@Embed(source='assets/speech.png')" click="addDialog();"/>
+	<mx:Button id="refresh" x="51" y="193" height="34" width="34" icon="@Embed(source='assets/refresh.png')" click="doRefresh();" />
+	<!--mx:Button id="openfile" x="11" y="260" height="34" width="34" icon="@Embed(source='assets/openfile.png')" click="doOpenDir();"/-->
+
+	<mx:Script>
+		<![CDATA[
+
+		    private function doPrev():void {
+           var dragTarget:DisplayObject = this; 
+           var top:DisplayObject;
+           dragTarget=dragTarget.parent;   // PhotoEdit
+           top=dragTarget.parent; 
+			     (top as ecards).doPrevious(dragTarget);
+        }
+        
+ 		    private function doNext():void {
+           var dragTarget:DisplayObject = this; 
+           var top:DisplayObject;
+           dragTarget=dragTarget.parent;   // PhotoEdit
+           top=dragTarget.parent; 
+			     (top as ecards).doNext(dragTarget);
+        }       
+
+ 		    private function doZoomin():void {
+           var dragTarget:DisplayObject = this; 
+           dragTarget=dragTarget.parent;   // PhotoEdit
+
+			     (dragTarget as PhotoEdit).doZoomin();
+        }
+        
+ 		    private function doZoomout():void {
+           var dragTarget:DisplayObject = this; 
+           dragTarget=dragTarget.parent;   // PhotoEdit
+
+			     (dragTarget as PhotoEdit).doZoomout();
+        }
+        
+ 		    private function doRotater():void {
+           var dragTarget:DisplayObject = this; 
+           dragTarget=dragTarget.parent;   // PhotoEdit
+
+			     (dragTarget as PhotoEdit).doRotater();
+        } 
+        
+        private function doRotatel():void {
+           var dragTarget:DisplayObject = this; 
+           dragTarget=dragTarget.parent;   // PhotoEdit
+
+			     (dragTarget as PhotoEdit).doRotatel();
+        }
+        
+         private function doToGray():void {
+           var dragTarget:DisplayObject = this; 
+           dragTarget=dragTarget.parent;   // PhotoEdit
+
+			     (dragTarget as PhotoEdit).doToGray();
+        }
+        
+        private function doToColor():void {
+           var dragTarget:DisplayObject = this; 
+           dragTarget=dragTarget.parent;   // PhotoEdit
+
+			     (dragTarget as PhotoEdit).doToColor();
+        }
+        
+        private function doRefresh():void {
+           var dragTarget:DisplayObject = this; 
+           dragTarget=dragTarget.parent;   // PhotoEdit
+
+			     (dragTarget as PhotoEdit).doRefresh();
+        }
+        
+        private function doOpenDir():void {
+           var dragTarget:DisplayObject = this; 
+           dragTarget=dragTarget.parent;   // PhotoEdit
+
+			     (dragTarget as PhotoEdit).doOpenDir();
+        }
+        
+        private function addDialog():void {
+           var dragTarget:DisplayObject = this; 
+           dragTarget=dragTarget.parent;   // PhotoEdit
+
+			     (dragTarget as PhotoEdit).addDialog();
+        }
+        
+		]]>
+	</mx:Script>
+	
+		
+</local:BaseCanvas>
+
+

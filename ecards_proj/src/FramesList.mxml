@@ -1,0 +1,251 @@
+<?xml version="1.0"?>
+
+<local:BaseCanvas xmlns:mx="http://www.adobe.com/2006/mxml" height="100" width="440" xmlns:local="*" horizontalScrollPolicy="off" verticalScrollPolicy="off" >
+	<!--mx:Image source="@Embed(source='assets/suback.png')" mouseEnabled="true"/-->
+  <mx:Image x="0" y="30" source="{leftClass}" scaleX="0.1" id="left" scaleY="0.25" rollOver="left.source=leftOverClass" rollOut="left.source=leftClass" click="scrollLeft();" buttonMode="true"/>
+  <mx:Image x="422" y="30" source="{rightClass}" scaleX="0.1" scaleY="0.25" id="right" rollOver="right.source=rightOverClass" rollOut="right.source=rightClass" click="scrollRight();" buttonMode="true"/>
+
+  <mx:Canvas id="inCanvas" x="8" y="0" height="100" width="415" creationComplete="loadFrames();">
+		   <mx:Image source="@Embed(source='assets/fback.png')" />
+		   <mx:Canvas height="72" width="98" x="6" y="13" borderStyle="solid" borderColor="{bcolor1}" />
+		   <mx:Canvas height="72" width="98" x="108" y="13" borderStyle="solid" borderColor="{bcolor2}" />
+		   <mx:Canvas height="72" width="98" x="210" y="13" borderStyle="solid" borderColor="{bcolor3}" />
+		   <mx:Canvas height="72" width="98" x="311" y="13" borderStyle="solid" borderColor="{bcolor4}" />
+		   
+		   <mx:Image id="image1" height="70" width="96" x="7" y="14" progress="onProgress1(event)" complete="onComplete1(event)" open="onOpen1(event)" maintainAspectRatio="false" 
+		          mouseOver="onMouseOver1(event);" mouseOut="onMouseOut1(event);" click="loadFrame(1)" />
+		   <mx:Canvas id="progress11" x="19" y="44" width="75" height="5" backgroundColor="white" visible="false"/>
+           <mx:Canvas id="progress12" x="19" y="44" width="0" height="5" backgroundColor="blue" visible="false"/>
+        
+		<mx:Image id="image2" height="70" width="96" x="109" y="14" progress="onProgress2(event)" complete="onComplete2(event)" open="onOpen2(event)" maintainAspectRatio="false" 
+		          mouseOver="onMouseOver2(event);" mouseOut="onMouseOut2(event);" click="loadFrame(2)"/>
+		<mx:Canvas id="progress21" x="121" y="44" width="75" height="5" backgroundColor="white" visible="false"/>
+    <mx:Canvas id="progress22" x="121" y="44" width="0" height="5" backgroundColor="blue" visible="false"/>
+    
+		<mx:Image id="image3" height="70" width="96" x="211" y="14" progress="onProgress3(event)" complete="onComplete3(event)" open="onOpen3(event)" maintainAspectRatio="false" 
+		          mouseOver="onMouseOver3(event);" mouseOut="onMouseOut3(event);" click="loadFrame(3)"/>
+		<mx:Canvas id="progress31" x="223" y="44" width="75" height="5" backgroundColor="white" visible="false"/>
+    <mx:Canvas id="progress32" x="223" y="44" width="0" height="5" backgroundColor="blue" visible="false"/>
+    
+	  <mx:Image id="image4" height="70" width="96" x="312" y="14" progress="onProgress4(event)" complete="onComplete4(event)" open="onOpen4(event)" maintainAspectRatio="false" 
+	            mouseOver="onMouseOver4(event);" mouseOut="onMouseOut4(event);" click="loadFrame(4)"/> 
+	  <mx:Canvas id="progress41" x="324" y="44" width="75" height="5" backgroundColor="white" visible="false"/>
+    <mx:Canvas id="progress42" x="324" y="44" width="0" height="5" backgroundColor="blue" visible="false"/>
+	  
+	  <mx:Script>
+	  	<![CDATA[		  
+		  	import flash.display.*;
+		  	import flash.events.*;
+		  	import flash.filters.*;
+		  	import flash.geom.*;
+
+		  	import mx.core.Application;
+		  	import mx.events.FlexEvent;
+		    import flash.utils.*;
+
+		  	private var frames:Array=new Array();
+		    private var index:int;
+		    private var cnt:int;
+			[Bindable]
+			private var bcolor1: int = 0x666666;
+			[Bindable]
+			private var bcolor2: int = 0x666666;
+			[Bindable]
+			private var bcolor3: int = 0x666666;
+			[Bindable]
+			private var bcolor4: int = 0x666666;
+			  
+			  /* fool code, temporary */
+			  private function onComplete1(e:Event):void {
+            progress11.visible=progress12.visible=false;
+            //inCanvas.removeChild(progress11);
+            //inCanvas.removeChild(progress12);
+        }
+        
+        private function onOpen1(e:Event):void {
+            progress11.visible=true;
+            progress12.visible=true;
+            progress12.width=0;
+        }
+        
+        private function onComplete2(e:Event):void {
+            progress21.visible=progress22.visible=false;
+            //inCanvas.removeChild(progress21);
+            //inCanvas.removeChild(progress22);
+        }
+        
+        private function onOpen2(e:Event):void {
+            progress21.visible=true;
+            progress22.visible=true;
+            progress22.width=0;
+        }
+        
+        private function onComplete3(e:Event):void {
+            progress31.visible=progress32.visible=false;
+            //inCanvas.removeChild(progress31);
+            //inCanvas.removeChild(progress32);
+        }
+        
+        private function onOpen3(e:Event):void {
+            progress31.visible=true;
+            progress32.visible=true;
+            progress32.width=0;
+        }
+        
+        private function onComplete4(e:Event):void {
+            progress41.visible=progress42.visible=false;
+            //inCanvas.removeChild(progress41);
+            //inCanvas.removeChild(progress42);
+        }
+        
+        private function onOpen4(e:Event):void {
+            progress41.visible=true;
+            progress42.visible=true;
+            progress42.width=0;
+        }
+        
+        private function onProgress1(e:ProgressEvent):void {
+            progress12.width=progress11.width*e.bytesLoaded/e.bytesTotal;
+        }
+        private function onProgress2(e:ProgressEvent):void {
+            progress22.width=progress21.width*e.bytesLoaded/e.bytesTotal;
+        }
+        private function onProgress3(e:ProgressEvent):void {
+            progress32.width=progress31.width*e.bytesLoaded/e.bytesTotal;
+        }
+        private function onProgress4(e:ProgressEvent):void {
+            progress42.width=progress41.width*e.bytesLoaded/e.bytesTotal;
+        }
+        
+        private function loadFrames():void {
+            var i:int=1;
+            if(root==null || this.width<2 || this.height<2) {
+                setTimeout(loadFrames,50);
+            } else {
+                for (;i <= 9; i++) {     // change this value of total Count of frames
+                   frames.push(String("frames/image" + i.toString() + ".png"));
+                }
+            }
+            cnt = frames.length;
+            index = 0;
+					
+            this.addEventListener("usr_s_left", doScrollLeft);
+            this.addEventListener("usr_s_right", doScrollRight);
+            loadPic(0);
+        }
+        
+        private function _load_pic(c:Object, i:int):void {
+           if(i < cnt) (c as Image).load(frames[i]);
+           else (c as Image).load("frames/end.jpg");
+        }
+        
+        private function loadPic(idx:int):void {
+           _load_pic(image1, idx);
+           _load_pic(image2, idx+1);
+           _load_pic(image3, idx+2);
+           _load_pic(image4, idx+3);
+           //_load_pic(image5, idx+4);
+        }
+        
+        private function doScrollLeft(e:Event):void {
+           index = index - 4;
+           if(index < 0) {
+              if(cnt % 4 == 0) index = cnt - 4;
+              else index = cnt - cnt%4;
+           }
+
+           loadPic(index);
+        }
+    
+        private function doScrollRight(e:Event):void {
+        	 index = index + 4;
+           if(index >= cnt) index = 0;  
+           
+           loadPic(index);  
+        }
+        
+        // Fucking ugly code
+        private function onMouseOver1(e:Event):void {
+           bcolor1 = 0x0033FF;
+        }
+        
+        private function onMouseOut1(e:Event):void {     
+           bcolor1 = 0x666666;
+        }
+        private function onMouseOver2(e:Event):void {
+           bcolor2 = 0x0033FF;
+        }
+        
+        private function onMouseOut2(e:Event):void {     
+           bcolor2 = 0x666666;
+        }
+        private function onMouseOver3(e:Event):void {
+           bcolor3 = 0x0033FF;
+        }
+        
+        private function onMouseOut3(e:Event):void {     
+           bcolor3 = 0x666666;
+        }
+        private function onMouseOver4(e:Event):void {
+           bcolor4 = 0x0033FF;
+        }
+        
+        private function onMouseOut4(e:Event):void {     
+           bcolor4 = 0x666666;
+        }
+        
+        private function loadFrame(i:int):void {
+           var dragTarget:DisplayObject = this; 
+           dragTarget=dragTarget.parent;   // PhotoEdit
+           if(i+index <= cnt)
+              (dragTarget as PhotoEdit).loadFrame(i+index);
+           else 
+              (dragTarget as PhotoEdit).loadFrame(-1);
+        }
+      	        
+	  	]]>
+	  </mx:Script> 
+		
+  </mx:Canvas>
+
+	<mx:Script>
+		<![CDATA[
+        import gs.TweenLite;
+			  import gs.easing.*;
+			  import mx.controls.Alert;
+    
+        private function scrollLeft():void {
+           TweenLite.to(inCanvas, 0.3, {x:-620, y:0});
+           inCanvas.x = 1040;
+           inCanvas.y = 4;
+           TweenLite.to(inCanvas, 0.3, {x:8, y:0});
+           
+           var result:Boolean = inCanvas.dispatchEvent(new Event("usr_s_left", true, false));
+        }
+        
+        private function scrollRight():void {
+           TweenLite.to(inCanvas, 0.3, {x:1040, y:0});
+           inCanvas.x = -620;
+           inCanvas.y = 4;
+           TweenLite.to(inCanvas, 0.3, {x:8, y:0});  
+           
+           var result:Boolean = inCanvas.dispatchEvent(new Event("usr_s_right", true, false));
+        }
+        
+	      [Embed(source='assets/left.png')]
+        private static const leftClass:Class;
+        [Embed(source='assets/left-over.png')]
+        private static const leftOverClass:Class;
+        [Embed(source='assets/right.png')]
+        private static const rightClass:Class;
+        [Embed(source='assets/right-over.png')]
+        private static const rightOverClass:Class;   
+    ]]>
+	</mx:Script>
+	
+</local:BaseCanvas>
+
+	
+	
+
+

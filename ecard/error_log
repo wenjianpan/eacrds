@@ -1,0 +1,7 @@
+[03-Apr-2012 07:42:53] PHP Warning:  unlink(card_pics/.) [<a href='function.unlink'>function.unlink</a>]: Is a directory in /home4/spalisho/public_html/ecard/flash_preview_email.php on line 24
+[03-Apr-2012 07:42:53] PHP Warning:  unlink(card_pics/..) [<a href='function.unlink'>function.unlink</a>]: Is a directory in /home4/spalisho/public_html/ecard/flash_preview_email.php on line 24
+[03-Apr-2012 07:43:14] PHP Warning:  mysql_connect() [<a href='function.mysql-connect'>function.mysql-connect</a>]: Access denied for user 'root'@'localhost' (using password: YES) in /home4/spalisho/public_html/ecard/flash_lib.php on line 117
+[03-Apr-2012 08:00:30] PHP Warning:  unlink(card_pics/.) [<a href='function.unlink'>function.unlink</a>]: Is a directory in /home4/spalisho/public_html/ecard/flash_preview_email.php on line 24
+[03-Apr-2012 08:00:30] PHP Warning:  unlink(card_pics/..) [<a href='function.unlink'>function.unlink</a>]: Is a directory in /home4/spalisho/public_html/ecard/flash_preview_email.php on line 24
+[08-Apr-2012 02:38:07] PHP Warning:  unlink(card_pics/.) [<a href='function.unlink'>function.unlink</a>]: Is a directory in /home4/spalisho/public_html/ecard/flash_preview_email.php on line 24
+[08-Apr-2012 02:38:07] PHP Warning:  unlink(card_pics/..) [<a href='function.unlink'>function.unlink</a>]: Is a directory in /home4/spalisho/public_html/ecard/flash_preview_email.php on line 24

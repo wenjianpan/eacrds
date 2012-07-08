@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="utf-8"?>
+<local:BaseCanvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:local="*" horizontalScrollPolicy="off" verticalScrollPolicy="off" 
+	 creationComplete = "onComplete()" >
+
+  <mx:Script>
+     <![CDATA[
+     	import mx.controls.Image; 
+        import mx.core.UIComponent;
+        import gs.TweenLite;
+	    import gs.easing.*;
+	    import mx.controls.Alert;
+        import flash.events.*;
+        import flash.net.*;
+        import mx.events.ToolTipEvent;
+        import mx.core.Application;
+        import mx.graphics.codec.JPEGEncoder;
+        import flash.events.HTTPStatusEvent;
+        import flash.events.IOErrorEvent;
+        import flash.events.ProgressEvent;
+        import flash.events.SecurityErrorEvent;
+
+        private static var _boundary:String = "";
+        public var myImage:Bitmap = null;
+        //public var uc:UIComponent = null;
+        public var image:Image = new Image();
+        private var urlLoaderEventDispatcher:URLLoader;
+        
+        private function onComplete():void 
+        {
+        	addChild(image);
+          //image.addEventListener(ToolTipEvent.TOOL_TIP_CREATE, toolTipCreateHandler);
+            textMessage.addEventListener(FocusEvent.FOCUS_IN, clearEditor3);
+            senderName.addEventListener(FocusEvent.FOCUS_IN, clearEditor4);
+            senderEmail.addEventListener(FocusEvent.FOCUS_IN, clearEditor5);
+            sendToName.addEventListener(FocusEvent.FOCUS_IN, clearEditor1);
+            sendToEmail.addEventListener(FocusEvent.FOCUS_IN, clearEditor2);
+        }
+        
+        private function sendMailAction():void
+        {
+        
+           //check email valid
+           if(senderEmail.text!="" && sendToEmail.text!=""&& textMessage.text!="" 
+                 && sendToName.text!="" && senderName.text!=""){
+                 if(senderEmail.text.indexOf("@")==-1 || sendToEmail.text.indexOf("@")==-1){
+              	     labState.text="Email Address Invalid!";
+              	     Alert.show(labState.text);
+              	     return;
+                 }
+                 
+           } else {
+                     labState.text="Please input all text area!";
+           	     			Alert.show(labState.text);
+           	    			return;
+           }
+                   
+          	//Alert.show("begin post");
+            var urlRequest:URLRequest = new URLRequest();
+	         urlRequest.url = "http://1.spalish.sinaapp.com/ecard/flash_send_email.php";
+	         //urlRequest.url = "http://127.0.0.1/flash_send_email.php";
+	         // Alert.show(urlRequest.url); 
+	         urlRequest.method = URLRequestMethod.POST;
+	         urlRequest.data = getPostData(null);
+	         urlRequest.requestHeaders.push( new URLRequestHeader('Content-Type','multipart/form-data; boundary='+getBoundary()));
+	         
+	         //navigateToURL(urlRequest,"this");
+	         // Alert.show("after post");   
+	         
+	         
+             urlLoaderEventDispatcher = new URLLoader();
+	         urlLoaderEventDispatcher.dataFormat = URLLoaderDataFormat.BINARY;
+	         urlLoaderEventDispatcher.addEventListener(Event.COMPLETE, completeHandler);
+	       try {  
+	         urlLoaderEventDispatcher.load(urlRequest);
+           }
+           catch(error:SecurityError) {
+               Alert.show("Send failed!"); 
+               return;
+           } 
+	         
+
+           
+           (this.parent as ecards).doHideLetter();
+        }
+               
+			public function getPostData(
+			                         parameters:Object,
+                                    fileDataName:String = "Filedata"
+                                    ):ByteArray {
+                    
+                    var fileName:String;
+                    var byteArray:ByteArray;
+                    //Alert.show("ready to get bitmapdata");
+                    var pictureBitmapData:BitmapData = Bitmap(image.source).bitmapData; 
+                    //Alert.show(pictureBitmapData.width.toString()+" "+pictureBitmapData.height.toString());
+                    byteArray = (new JPEGEncoder(100.0)).encode(pictureBitmapData);
+                   // byteArray = image.source();
+					
+                     fileName = "temp22.jpg";
+                    //Alert.show("get byte array");
+
+                        var i:int;
+                        var bytes:String;
+
+                        var postData:ByteArray = new ByteArray();
+                        postData.endian = Endian.BIG_ENDIAN;
+
+                        //add Filename to parameters
+                        if(parameters == null) {
+                                parameters = new Object();
+                        }
+                        parameters.Filename = fileName;
+						parameters.Receiver = sendToEmail.text;
+						parameters.Sender = senderEmail.text;
+						parameters.Content = textMessage.text;
+						parameters.SenderName = senderName.text;
+						parameters.ReceiverName = sendToName.text;
+                        //add parameters to postData
+                        for(var name:String in parameters) {
+                        	
+                                postData = BOUNDARY(postData);
+                                
+                                postData = LINEBREAK(postData);
+                                bytes = 'Content-Disposition: form-data; name="' + name + '"';
+                                for ( i = 0; i < bytes.length; i++ ) {
+                                        postData.writeByte( bytes.charCodeAt(i) );
+                                }
+                                
+                                postData = LINEBREAK(postData);
+                               
+                                postData = LINEBREAK(postData);
+                               
+                                postData.writeUTFBytes(parameters[name]);
+                               
+                                postData = LINEBREAK(postData);
+                                
+                        }
+
+						 
+                        //add Filedata to postData
+                        postData = BOUNDARY(postData);
+                       
+                        postData = LINEBREAK(postData);
+                        
+                        bytes = 'Content-Disposition: form-data; name="'+fileDataName+'"; filename="';
+                        for ( i = 0; i < bytes.length; i++ ) {
+                                postData.writeByte( bytes.charCodeAt(i) );
+                        }
+                        
+                        postData.writeUTFBytes(fileName);
+                        
+                        postData = QUOTATIONMARK(postData);
+                        postData = LINEBREAK(postData);
+                        bytes = 'Content-Type: image/jpeg';
+                        for ( i = 0; i < bytes.length; i++ ) {
+                                postData.writeByte( bytes.charCodeAt(i) );
+                        }
+                        postData = LINEBREAK(postData);
+                        postData = LINEBREAK(postData);
+                        postData.writeBytes(byteArray, 0, byteArray.length);
+                        postData = LINEBREAK(postData);
+
+                        //add upload filed to postData
+                        postData = LINEBREAK(postData);
+                        postData = BOUNDARY(postData);
+                        postData = LINEBREAK(postData);
+                        bytes = 'Content-Disposition: form-data; name="Upload"';
+                        for ( i = 0; i < bytes.length; i++ ) {
+                                postData.writeByte( bytes.charCodeAt(i) );
+                        }
+                        postData = LINEBREAK(postData);
+                        postData = LINEBREAK(postData);
+                        bytes = 'Submit Query';
+                        for ( i = 0; i < bytes.length; i++ ) {
+                                postData.writeByte( bytes.charCodeAt(i) );
+                        }
+                        postData = LINEBREAK(postData);
+
+                        //closing boundary
+                        postData = BOUNDARY(postData);
+                        postData = DOUBLEDASH(postData);
+
+                        return postData;
+                }
+				private function BOUNDARY(p:ByteArray):ByteArray {
+                        var l:int = getBoundary().length;
+
+                        p = DOUBLEDASH(p);
+                        for (var i:int = 0; i < l; i++ ) {
+                                p.writeByte( _boundary.charCodeAt( i ) );
+                        }
+                        return p;
+                }
+             private static function DOUBLEDASH(p:ByteArray):ByteArray {
+                        p.writeShort(0x2d2d);
+                        return p;
+                }
+ 			private static function QUOTATIONMARK(p:ByteArray):ByteArray {
+                        p.writeByte(0x22);
+                        return p;
+                }
+
+                /**
+                 * Add one linebreak
+                 */
+                private function LINEBREAK(p:ByteArray):ByteArray {
+                        p.writeShort(0x0d0a);
+                        return p;
+                }
+
+			 public static function getBoundary():String {
+
+                       if(_boundary.length == 0) {
+                            _boundary   =   '----WebKitFormBoundarygrqFn6SPkN4RGWN8';
+                        }
+						
+                        return _boundary;
+                }
+        private function completeHandler(evt:Event):void {
+	var mytxt:String=(evt.currentTarget as URLLoader).data;
+	    //if(mytxt == "1")
+              Alert.show("Send sucessfully!");
+           //	else
+           //	  Alert.show(mytxt+",Send failed!");
+        }
+        
+        /* ugly code, need to refactory */
+        [Bindable]
+        private var textColor1:int = 0x666666;
+        private var edited1:Boolean = false;
+        private function clearEditor1(e:Event) : void {
+           textColor1 = 0;       
+           if(edited1 == false) {
+             sendToName.text = "";
+             sendToName.htmlText = "";
+             sendToName.setSelection(0,0); 
+             edited1 = true;
+           }
+        }
+        private function stopMyDrag1(e:MouseEvent): void {
+           e.stopImmediatePropagation();
+           clearEditor1(null);
+        }
+		
+		[Bindable]
+        private var textColor2:int = 0x666666;
+        private var edited2:Boolean = false;
+        private function clearEditor2(e:Event) : void {
+           textColor2 = 0;
+           if(edited2 == false) {
+             sendToEmail.text = "";
+             sendToEmail.htmlText = "";
+             sendToEmail.setSelection(0,0); 
+             edited2 = true;
+           }
+        }
+        private function stopMyDrag2(e:MouseEvent): void {
+           e.stopImmediatePropagation();
+           clearEditor2(null);
+        }
+        
+        [Bindable]
+        private var textColor3:int = 0x666666;
+        private var edited3:Boolean = false;
+        private function clearEditor3(e:Event) : void {
+           textColor3 = 0; 
+           if(edited3 == false) {
+             textMessage.text = "";
+             textMessage.htmlText = "";
+             textMessage.setSelection(0,0); 
+             edited3 = true;
+           }
+        }
+        private function stopMyDrag3(e:MouseEvent): void {
+           e.stopImmediatePropagation();
+           clearEditor3(null);
+        }
+        
+        [Bindable]
+        private var textColor4:int = 0x666666;
+        private var edited4:Boolean = false;
+        private function clearEditor4(e:Event) : void {
+           textColor4 = 0;
+           if(edited4 == false) {
+             senderName.text = "";
+             senderName.htmlText = "";
+             senderName.setSelection(0,0); 
+             edited4 = true;
+           }
+        }
+        private function stopMyDrag4(e:MouseEvent): void {
+           e.stopImmediatePropagation();
+           clearEditor4(null);
+        }
+        
+        [Bindable]
+        private var textColor5:int = 0x666666;
+        private var edited5:Boolean = false;
+        private function clearEditor5(e:Event) : void {
+           textColor5 = 0; 
+           if(edited5 == false) {
+             senderEmail.text = "";
+             senderEmail.htmlText = "";
+             senderEmail.setSelection(0,0); 
+             edited5 = true;
+           }
+        }
+        private function stopMyDrag5(e:MouseEvent): void {
+           e.stopImmediatePropagation();
+           clearEditor5(null);
+        }
+        
+		/**
+		 * Event handler method to create a new tooltip object
+		 */
+		private function toolTipCreateHandler(ev:ToolTipEvent):void
+		{
+			var tooltip:PhotoToolTip = new PhotoToolTip();
+			tooltip.image.source = image.source;
+			ev.toolTip = tooltip;
+		}
+        private function preview():void
+        {
+        	//check email valid
+           if(senderEmail.text!="" && sendToEmail.text!=""&& textMessage.text!=""){
+                 if(senderEmail.text.indexOf("@")==-1 || sendToEmail.text.indexOf("@")==-1){
+              	     labState.text="Email Address Invalid!";
+              	     Alert.show(labState.text);
+              	     return;
+                 }
+                 
+           } else {
+                     labState.text="Please input all text area!";
+           	     			Alert.show(labState.text);
+           	    			return;
+           }
+              
+          	//Alert.show("begin post");
+            var urlRequest:URLRequest = new URLRequest();
+	         urlRequest.url = "http://www.spalish.org/ecard/flash_preview_email.php"; 
+	         //urlRequest.url = "http://127.0.0.1/flash_preview_email.php"; 
+	         // Alert.show(urlRequest.url); 
+	         urlRequest.method = URLRequestMethod.POST;
+	         urlRequest.data = getPostData(null);
+	         urlRequest.requestHeaders.push( new URLRequestHeader('Content-Type','multipart/form-data; boundary='+getBoundary()));
+	         
+	         navigateToURL(urlRequest,"this");
+	         // Alert.show("after post");   
+	          
+	         //urlLoaderEventDispatcher = new URLLoader();
+	         //urlLoaderEventDispatcher.dataFormat = URLLoaderDataFormat.BINARY;
+	         //urlLoaderEventDispatcher.addEventListener(Event.COMPLETE, completeHandler);
+	         //urlLoaderEventDispatcher.load(urlRequest);
+        }
+     ]]>
+  </mx:Script>	
+	
+  <mx:Image source="@Embed(source='assets/letter_paper.png')" mouseEnabled="true" /> 
+  <mx:Label id="labState" x="150" y="20"  width="200" fontSize="14" color="#FE0113" />
+         
+  <mx:TextArea id="textMessage" x="60" y="288" height="94" width="390" text="Your wishes here" mouseDown="stopMyDrag3(event)"
+      backgroundAlpha="0.0" borderStyle="solid" borderColor="#DBB37F" fontSize="12" leading="19" color="{textColor3}" />
+
+  <mx:Label text="Your Info:" x="100" y="414" fontWeight="bold" fontSize="12" width="100%"/>
+  <mx:TextInput id="senderName" x="180" y="414" width="100" text="Name" mouseDown="stopMyDrag4(event)"
+      backgroundAlpha="0.0" borderStyle="solid" borderColor="#DBB37F" fontSize="12" color="{textColor4}" />
+  <mx:TextInput id="senderEmail" x="300" y="414" width="150" text="Email Address" mouseDown="stopMyDrag5(event)"
+      backgroundAlpha="0.0" borderStyle="solid" borderColor="#DBB37F" fontSize="12" color="{textColor5}" />           
+  
+  <mx:Label text="Receiver's Info:" x="63" y="442" fontWeight="bold" fontSize="12" width="100%"/>
+  <mx:TextInput id="sendToName" x="180" y="442" width="100" text="Name" mouseDown="stopMyDrag1(event)"
+      backgroundAlpha="0.0" borderStyle="solid" borderColor="#DBB37F" fontSize="12" color="{textColor1}" />     
+  <mx:TextInput id="sendToEmail" x="300" y="442" width="150" text="Email Address" mouseDown="stopMyDrag2(event)"
+      backgroundAlpha="0.0" borderStyle="solid" borderColor="#DBB37F" fontSize="12" color="{textColor2}" />
+
+  <mx:Button id="backBtn" label="Back"  x="250" y="490" width="55" click="(parent as ecards).doHideLetter()"/>
+  <mx:Button id="preBtm" label="Preview"  x="315" y="490" width="80" click="preview()"/>
+  <mx:Button id="submitBtn" label="Send"  x="405" y="490" width="55" click="sendMailAction()"/>
+     
+</local:BaseCanvas>
+
